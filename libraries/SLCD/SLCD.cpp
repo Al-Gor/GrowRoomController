@@ -20,10 +20,14 @@
 
 #include <inttypes.h> 
 #include <stdlib.h>
-#include "WConstants.h" 
+#if ARDUINO >= 100
+#include <Arduino.h> 
+#else
+#include <WProgram.h> 
+#endif
 #include "SLCD.h"      
 
-#include "NewSoftSerial.h"
+#include "SoftwareSerial.h"
 
 #define SPECIAL_CONTROL 0x7C
 #define DISPLAY_CONTROL	0xFE
@@ -40,7 +44,7 @@
 #define BLINK_CURSOR_OFF	0x0C
 #define SET_POSITION		0x80
    
-NewSoftSerial mySerial(7, 8);
+SoftwareSerial mySerial(7, 8);
 
 SLCD::SLCD(int rows, int cols)
 {                          

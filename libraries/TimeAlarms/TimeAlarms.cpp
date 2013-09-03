@@ -22,7 +22,11 @@ extern "C" {
 #include <string.h> // for memset
 }
 
-#include <WProgram.h>
+#if ARDUINO >= 100
+#include <Arduino.h> 
+#else
+#include <WProgram.h> 
+#endif
 #include "TimeAlarms.h"
 #include "Time.h"
 
@@ -135,7 +139,75 @@ AlarmID_t TimeAlarmsClass::alarmRepeat(time_t value, OnTick_t onTickHandler){ //
     if( value <= SECS_PER_DAY)
        return create( value, onTickHandler, IS_REPEAT, dtDailyAlarm );
     else
-       return dtINVALID_ALARM_ID; // dont't allocate if the time is greater than one day 	      }        AlarmID_t TimeAlarmsClass::alarmRepeat(const int H,  const int M,  const int S, OnTick_t onTickHandler){ // as above with HMS arguments         return create( AlarmHMS(H,M,S), onTickHandler, IS_REPEAT, dtDailyAlarm );    }        AlarmID_t TimeAlarmsClass::alarmRepeat(const timeDayOfWeek_t DOW, const int H,  const int M,  const int S, OnTick_t onTickHandler){  // as above, with day of week        return create( (DOW-1) * SECS_PER_DAY + AlarmHMS(H,M,S), onTickHandler, IS_REPEAT, dtWeeklyAlarm );          }          AlarmID_t TimeAlarmsClass::timerOnce(time_t value, OnTick_t onTickHandler){   // trigger once after the given number of seconds          return create( value, onTickHandler, IS_ONESHOT, dtTimer );    }        AlarmID_t TimeAlarmsClass::timerOnce(const int H,  const int M,  const int S, OnTick_t onTickHandler){   // As above with HMS arguments      return create( AlarmHMS(H,M,S), onTickHandler, IS_ONESHOT, dtTimer );    }          AlarmID_t TimeAlarmsClass::timerRepeat(time_t value, OnTick_t onTickHandler){ // trigger after the given number of seconds continuously         return create( value, onTickHandler, IS_REPEAT, dtTimer);    }        AlarmID_t TimeAlarmsClass::timerRepeat(const int H,  const int M,  const int S, OnTick_t onTickHandler){ // trigger after the given number of seconds continuously         return create( AlarmHMS(H,M,S), onTickHandler, IS_REPEAT, dtTimer);    }        void TimeAlarmsClass::enable(AlarmID_t ID)    {      if(isAllocated(ID)) {        Alarm[ID].Mode.isEnabled = (Alarm[ID].value != 0) && (Alarm[ID].onTickHandler != 0) ;  // only enable if value is non zero and a tick handler has been set        Alarm[ID].updateNextTrigger(); // trigger is updated whenever  this is called, even if already enabled	       }    }        void TimeAlarmsClass::disable(AlarmID_t ID)    {      if(isAllocated(ID))        Alarm[ID].Mode.isEnabled = false;    }          // write the given value to the given alarm    void TimeAlarmsClass::write(AlarmID_t ID, time_t value)    {      if(isAllocated(ID))      {        Alarm[ID].value = value;        enable(ID);  // update trigger time      }    }        // return the value for the given alarm ID    time_t TimeAlarmsClass::read(AlarmID_t ID)    {      if(isAllocated(ID))        return Alarm[ID].value ;      else 	        return dtINVALID_TIME;      }        // return the alarm type for the given alarm ID    dtAlarmPeriod_t TimeAlarmsClass::readType(AlarmID_t ID)    {      if(isAllocated(ID))        return (dtAlarmPeriod_t)Alarm[ID].Mode.alarmType ;      else 	        return dtNotAllocated;      }
+       return dtINVALID_ALARM_ID; // dont't allocate if the time is greater than one day 	  
+    }
+    
+    AlarmID_t TimeAlarmsClass::alarmRepeat(const int H,  const int M,  const int S, OnTick_t onTickHandler){ // as above with HMS arguments
+         return create( AlarmHMS(H,M,S), onTickHandler, IS_REPEAT, dtDailyAlarm );
+    }
+    
+    AlarmID_t TimeAlarmsClass::alarmRepeat(const timeDayOfWeek_t DOW, const int H,  const int M,  const int S, OnTick_t onTickHandler){  // as above, with day of week 
+       return create( (DOW-1) * SECS_PER_DAY + AlarmHMS(H,M,S), onTickHandler, IS_REPEAT, dtWeeklyAlarm );      
+    }
+      
+    AlarmID_t TimeAlarmsClass::timerOnce(time_t value, OnTick_t onTickHandler){   // trigger once after the given number of seconds 
+         return create( value, onTickHandler, IS_ONESHOT, dtTimer );
+    }
+    
+    AlarmID_t TimeAlarmsClass::timerOnce(const int H,  const int M,  const int S, OnTick_t onTickHandler){   // As above with HMS arguments
+      return create( AlarmHMS(H,M,S), onTickHandler, IS_ONESHOT, dtTimer );
+    }
+      
+    AlarmID_t TimeAlarmsClass::timerRepeat(time_t value, OnTick_t onTickHandler){ // trigger after the given number of seconds continuously
+         return create( value, onTickHandler, IS_REPEAT, dtTimer);
+    }
+    
+    AlarmID_t TimeAlarmsClass::timerRepeat(const int H,  const int M,  const int S, OnTick_t onTickHandler){ // trigger after the given number of seconds continuously
+         return create( AlarmHMS(H,M,S), onTickHandler, IS_REPEAT, dtTimer);
+    }
+    
+    void TimeAlarmsClass::enable(AlarmID_t ID)
+    {
+      if(isAllocated(ID)) {
+        Alarm[ID].Mode.isEnabled = (Alarm[ID].value != 0) && (Alarm[ID].onTickHandler != 0) ;  // only enable if value is non zero and a tick handler has been set
+        Alarm[ID].updateNextTrigger(); // trigger is updated whenever  this is called, even if already enabled	 
+      }
+    }
+    
+    void TimeAlarmsClass::disable(AlarmID_t ID)
+    {
+      if(isAllocated(ID))
+        Alarm[ID].Mode.isEnabled = false;
+    }
+      
+    // write the given value to the given alarm
+    void TimeAlarmsClass::write(AlarmID_t ID, time_t value)
+    {
+      if(isAllocated(ID))
+      {
+        Alarm[ID].value = value;
+        enable(ID);  // update trigger time
+      }
+    }
+    
+    // return the value for the given alarm ID
+    time_t TimeAlarmsClass::read(AlarmID_t ID)
+    {
+      if(isAllocated(ID))
+        return Alarm[ID].value ;
+      else 	
+        return dtINVALID_TIME;  
+    }
+    
+    // return the alarm type for the given alarm ID
+    dtAlarmPeriod_t TimeAlarmsClass::readType(AlarmID_t ID)
+    {
+      if(isAllocated(ID))
+        return (dtAlarmPeriod_t)Alarm[ID].Mode.alarmType ;
+      else 	
+        return dtNotAllocated;  
+    }
+
     void TimeAlarmsClass::free(AlarmID_t ID)
     {
       if(isAllocated(ID))
@@ -147,4 +219,139 @@ AlarmID_t TimeAlarmsClass::alarmRepeat(time_t value, OnTick_t onTickHandler){ //
     	Alarm[ID].nextTrigger = 0;   	
       }
     }
-        // returns the number of allocated timers    uint8_t TimeAlarmsClass::count()    {       uint8_t c = 0;        for(uint8_t id = 0; id < dtNBR_ALARMS; id++)       {          if(isAllocated(id))            c++;       }       return c;    }        // returns true only if id is allocated and the type is a time based alarm, returns false if not allocated or if its a timer     bool TimeAlarmsClass::isAlarm(AlarmID_t ID)     {        return( isAllocated(ID) && dtIsAlarm(Alarm[ID].Mode.alarmType) );     }          // returns true if this id is allocated     bool TimeAlarmsClass::isAllocated(AlarmID_t ID)     {        return( ID < dtNBR_ALARMS && Alarm[ID].Mode.alarmType != dtNotAllocated );     }             AlarmID_t TimeAlarmsClass::getTriggeredAlarmId()  //returns the currently triggered  alarm id    // returns  dtINVALID_ALARM_ID if not invoked from within an alarm handler    {      if(isServicing)           return  servicedAlarmId;  // new private data member used instead of local loop variable i in serviceAlarms();      else         return dtINVALID_ALARM_ID; // valid ids only available when servicing a callback    }         // following functions are not Alarm ID specific.    void TimeAlarmsClass::delay(unsigned long ms)    {      unsigned long start = millis();      while( millis() - start  <= ms)        serviceAlarms();    }    		    void TimeAlarmsClass::waitForDigits( uint8_t Digits, dtUnits_t Units)    {      while(Digits != getDigitsNow(Units) )      {        serviceAlarms();      }    }        void TimeAlarmsClass::waitForRollover( dtUnits_t Units)    {      while(getDigitsNow(Units) == 0  ) // if its just rolled over than wait for another rollover	                                    serviceAlarms();      waitForDigits(0, Units);    }        uint8_t TimeAlarmsClass::getDigitsNow( dtUnits_t Units)    {      time_t time = now();      if(Units == dtSecond) return numberOfSeconds(time);      if(Units == dtMinute) return numberOfMinutes(time);       if(Units == dtHour) return numberOfHours(time);      if(Units == dtDay) return dayOfWeek(time);      return 255;  // This should never happen     }        //***********************************************************    //* Private Methods        void TimeAlarmsClass::serviceAlarms()    {      if(! isServicing)      {        isServicing = true;        for( servicedAlarmId = 0; servicedAlarmId < dtNBR_ALARMS; servicedAlarmId++)        {          if( Alarm[servicedAlarmId].Mode.isEnabled && (now() >= Alarm[servicedAlarmId].nextTrigger)  )          {            OnTick_t TickHandler = Alarm[servicedAlarmId].onTickHandler;            if(Alarm[servicedAlarmId].Mode.isOneShot)               free(servicedAlarmId);  // free the ID if mode is OnShot		            else                  Alarm[servicedAlarmId].updateNextTrigger();            if( TickHandler != NULL) {                      (*TickHandler)();     // call the handler              }          }        }        isServicing = false;      }    }        // returns the absolute time of the next scheduled alarm, or 0 if none     time_t TimeAlarmsClass::getNextTrigger()     {     time_t nextTrigger = 0xffffffff;  // the max time value             for(uint8_t id = 0; id < dtNBR_ALARMS; id++)        {          if(isAllocated(id) )          {        	if(Alarm[id].nextTrigger <  nextTrigger)    		   nextTrigger = Alarm[id].nextTrigger;	          }          	}        return nextTrigger == 0xffffffff ? 0 : nextTrigger;  	     }        // attempt to create an alarm and return true if successful    AlarmID_t TimeAlarmsClass::create( time_t value, OnTick_t onTickHandler, uint8_t isOneShot, dtAlarmPeriod_t alarmType, uint8_t isEnabled)     {      if( ! (dtIsAlarm(alarmType) && now() < SECS_PER_YEAR)) // only create alarm ids if the time is at least Jan 1 1971      {      	for(uint8_t id = 0; id < dtNBR_ALARMS; id++)        {          if( Alarm[id].Mode.alarmType == dtNotAllocated )    	  {    	  // here if there is an Alarm id that is not allocated      	    Alarm[id].onTickHandler = onTickHandler;    	    Alarm[id].Mode.isOneShot = isOneShot;    	    Alarm[id].Mode.alarmType = alarmType;    	    Alarm[id].value = value;    	    isEnabled ?  enable(id) : disable(id);               return id;  // alarm created ok    	  }          }      }      return dtINVALID_ALARM_ID; // no IDs available or time is invalid    }        // make one instance for the user to use    TimeAlarmsClass Alarm = TimeAlarmsClass() ;        
+    
+    // returns the number of allocated timers
+    uint8_t TimeAlarmsClass::count()
+    {
+       uint8_t c = 0; 
+       for(uint8_t id = 0; id < dtNBR_ALARMS; id++)
+       {
+          if(isAllocated(id))
+            c++;
+       }
+       return c;
+    }
+    
+    // returns true only if id is allocated and the type is a time based alarm, returns false if not allocated or if its a timer
+     bool TimeAlarmsClass::isAlarm(AlarmID_t ID)
+     {
+        return( isAllocated(ID) && dtIsAlarm(Alarm[ID].Mode.alarmType) );
+     }
+     
+     // returns true if this id is allocated
+     bool TimeAlarmsClass::isAllocated(AlarmID_t ID)
+     {
+        return( ID < dtNBR_ALARMS && Alarm[ID].Mode.alarmType != dtNotAllocated );
+     }
+     
+    
+    AlarmID_t TimeAlarmsClass::getTriggeredAlarmId()  //returns the currently triggered  alarm id
+    // returns  dtINVALID_ALARM_ID if not invoked from within an alarm handler
+    {
+      if(isServicing)
+           return  servicedAlarmId;  // new private data member used instead of local loop variable i in serviceAlarms();
+      else
+         return dtINVALID_ALARM_ID; // valid ids only available when servicing a callback
+    }
+     
+    // following functions are not Alarm ID specific.
+    void TimeAlarmsClass::delay(unsigned long ms)
+    {
+      unsigned long start = millis();
+      while( millis() - start  <= ms)
+        serviceAlarms();
+    }
+    		
+    void TimeAlarmsClass::waitForDigits( uint8_t Digits, dtUnits_t Units)
+    {
+      while(Digits != getDigitsNow(Units) )
+      {
+        serviceAlarms();
+      }
+    }
+    
+    void TimeAlarmsClass::waitForRollover( dtUnits_t Units)
+    {
+      while(getDigitsNow(Units) == 0  ) // if its just rolled over than wait for another rollover	                            
+        serviceAlarms();
+      waitForDigits(0, Units);
+    }
+    
+    uint8_t TimeAlarmsClass::getDigitsNow( dtUnits_t Units)
+    {
+      time_t time = now();
+      if(Units == dtSecond) return numberOfSeconds(time);
+      if(Units == dtMinute) return numberOfMinutes(time); 
+      if(Units == dtHour) return numberOfHours(time);
+      if(Units == dtDay) return dayOfWeek(time);
+      return 255;  // This should never happen 
+    }
+    
+    //***********************************************************
+    //* Private Methods
+    
+    void TimeAlarmsClass::serviceAlarms()
+    {
+      if(! isServicing)
+      {
+        isServicing = true;
+        for( servicedAlarmId = 0; servicedAlarmId < dtNBR_ALARMS; servicedAlarmId++)
+        {
+          if( Alarm[servicedAlarmId].Mode.isEnabled && (now() >= Alarm[servicedAlarmId].nextTrigger)  )
+          {
+            OnTick_t TickHandler = Alarm[servicedAlarmId].onTickHandler;
+            if(Alarm[servicedAlarmId].Mode.isOneShot)
+               free(servicedAlarmId);  // free the ID if mode is OnShot		
+            else   
+               Alarm[servicedAlarmId].updateNextTrigger();
+            if( TickHandler != NULL) {        
+              (*TickHandler)();     // call the handler  
+            }
+          }
+        }
+        isServicing = false;
+      }
+    }
+    
+    // returns the absolute time of the next scheduled alarm, or 0 if none
+     time_t TimeAlarmsClass::getNextTrigger()
+     {
+     time_t nextTrigger = 0xffffffff;  // the max time value
+     
+        for(uint8_t id = 0; id < dtNBR_ALARMS; id++)
+        {
+          if(isAllocated(id) )
+          {
+        	if(Alarm[id].nextTrigger <  nextTrigger)
+    		   nextTrigger = Alarm[id].nextTrigger;	
+          }      
+    	}
+        return nextTrigger == 0xffffffff ? 0 : nextTrigger;  	
+     }
+    
+    // attempt to create an alarm and return true if successful
+    AlarmID_t TimeAlarmsClass::create( time_t value, OnTick_t onTickHandler, uint8_t isOneShot, dtAlarmPeriod_t alarmType, uint8_t isEnabled) 
+    {
+      if( ! (dtIsAlarm(alarmType) && now() < SECS_PER_YEAR)) // only create alarm ids if the time is at least Jan 1 1971
+      {  
+    	for(uint8_t id = 0; id < dtNBR_ALARMS; id++)
+        {
+          if( Alarm[id].Mode.alarmType == dtNotAllocated )
+    	  {
+    	  // here if there is an Alarm id that is not allocated
+      	    Alarm[id].onTickHandler = onTickHandler;
+    	    Alarm[id].Mode.isOneShot = isOneShot;
+    	    Alarm[id].Mode.alarmType = alarmType;
+    	    Alarm[id].value = value;
+    	    isEnabled ?  enable(id) : disable(id);   
+            return id;  // alarm created ok
+    	  }  
+        }
+      }
+      return dtINVALID_ALARM_ID; // no IDs available or time is invalid
+    }
+    
+    // make one instance for the user to use
+    TimeAlarmsClass Alarm = TimeAlarmsClass() ;
+    
+    

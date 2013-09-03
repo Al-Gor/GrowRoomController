@@ -1,5 +1,5 @@
 /*
- * GreenRoomController.pde
+ * GreenRoomController.ino
  *
  * This program keeps track of the current time, date,
  * temperature and humidity. It controls the enviroment
@@ -167,8 +167,7 @@ void setup()
   if (!SD.begin(SD_PIN)) {
     Serial.println("SD card failed to initialize");
     lcd.clear();
-    lcd.print("SD failed to",0,0);
-    lcd.print("initialize",1,0);
+    lcd.print("SD failed",0,0);
   }
   else {
     Serial.println("SD card initialized.");
